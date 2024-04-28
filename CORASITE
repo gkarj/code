@@ -1,0 +1,170 @@
+import sys
+from PyQt5.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
+from neo4j import GraphDatabase
+
+
+class Neo4jConnection:
+    def __init__(self, uri, user, pwd):
+        self.__uri = uri
+        self.__user = user
+        self.__pwd = pwd
+        self.__driver = None
+        try:
+            self.__driver = GraphDatabase.driver(
+                self.__uri, auth=(self.__user, self.__pwd)
+            )
+        except Exception as e:
+            print("Failed to create the driver:", e)
+
+    def close(self):
+        if self.__driver is not None:
+            self.__driver.close()
+
+    def query(self, query, db=None):
+        assert self.__driver is not None, "Driver not initialized!"
+        session = None
+        response = None
+        try:
+            session = (
+                self.__driver.session(database=db)
+                if db is not None
+                else self.__driver.session()
+            )
+            response = list(session.run(query))
+        except Exception as e:
+            print("Query failed:", e)
+        finally:
+            if session is not None:
+                session.close()
+        return response
+
+
+conn = Neo4jConnection(uri="bolt://localhost:7689", user="neo4j", pwd="")
+
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Neo4j Desktop App")
+        self.setGeometry(100, 100, 700, 500)
+        self.setStyleSheet("background-color: white;")
+
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
+        layout = QVBoxLayout(self.central_widget)
+
+        self.title_label = QLabel("CORA PAPER CITATIONS")
+        self.title_label.setStyleSheet(
+            "color: black; font-size: 25px; font-weight: bold;"
+        )
+        layout.addWidget(self.title_label)
+
+        self.create_query_section(layout)
+        self.create_direct_cite_section(layout)
+        self.create_indirect_cite_section(layout)
+
+    def create_query_section(self, layout):
+        query_label = QLabel("Query")
+        layout.addWidget(query_label)
+
+        self.blog_title_entry = QLineEdit()
+        layout.addWidget(self.blog_title_entry)
+
+        submit_button = QPushButton("Run Query")
+        submit_button.clicked.connect(self.submit_query)
+        layout.addWidget(submit_button)
+
+        self.query_result_label = QLabel("")
+        self.query_result_label.setStyleSheet("font-size: 12px; color: blue;")
+        layout.addWidget(self.query_result_label)
+
+    def create_direct_cite_section(self, layout):
+        direct_label = QLabel("Does Paper with id1 cite id2 directly?")
+        layout.addWidget(direct_label)
+
+        self.direct_id1_entry = QLineEdit()
+        layout.addWidget(self.direct_id1_entry)
+
+        self.direct_id2_entry = QLineEdit()
+        layout.addWidget(self.direct_id2_entry)
+
+        direct_check_button = QPushButton("Check")
+        direct_check_button.clicked.connect(self.direct_check)
+        layout.addWidget(direct_check_button)
+
+        self.direct_result_label = QLabel("")
+        self.direct_result_label.setStyleSheet("font-size: 12px; color: blue;")
+        layout.addWidget(self.direct_result_label)
+
+    def create_indirect_cite_section(self, layout):
+        indirect_label = QLabel("Does Paper with id1 cite id2 indirectly?")
+        layout.addWidget(indirect_label)
+
+        self.recur_id1_entry = QLineEdit()
+        layout.addWidget(self.recur_id1_entry)
+
+        self.recur_id2_entry = QLineEdit()
+        layout.addWidget(self.recur_id2_entry)
+
+        indirect_check_button = QPushButton("Check")
+        indirect_check_button.clicked.connect(self.indirect_check)
+        layout.addWidget(indirect_check_button)
+
+        self.indirect_result_label = QLabel("")
+        self.indirect_result_label.setStyleSheet("font-size: 12px; color: blue;")
+        layout.addWidget(self.indirect_result_label)
+
+    def submit_query(self):
+        query_string = self.blog_title_entry.text()
+        try:
+            result = conn.query(query_string, db="neo4j")
+
+            if result:
+                result_str = "\n".join(str(row) for row in result)
+                print("Result:", result_str)
+                self.query_result_label.setText(result_str)
+            else:
+                print("No results found.")
+                self.query_result_label.setText("No results found.")
+        except Exception as e:
+            print("An error occurred:", e)
+            self.query_result_label.setText("An error occurred: " + str(e))
+
+    def direct_check(self):
+        id1 = self.direct_id1_entry.text()
+        id2 = self.direct_id2_entry.text()
+        query_string = f"""MATCH p=(a:Paper{{id:'{id1}'}})-[:CITES]->(b:Paper{{id:'{id2}'}}) RETURN a, b, length(p) AS citation_depth"""
+        result = conn.query(query_string, db="neo4j")
+        if result and result[0]["citation_depth"] <= 1:
+            self.direct_result_label.setText("YES")
+        else:
+            self.direct_result_label.setText("NO")
+
+    def indirect_check(self):
+        id1 = self.recur_id1_entry.text()
+        id2 = self.recur_id2_entry.text()
+        query_string = f"""MATCH p=(a:Paper{{id:'{id1}'}})-[:CITES]->(b:Paper{{id:'{id2}'}}) RETURN a, b, length(p) AS citation_depth"""
+        result = conn.query(query_string, db="neo4j")
+        if result:
+            self.indirect_result_label.setText("YES")
+        else:
+            self.indirect_result_label.setText("NO")
+
+
+def main():
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    main()
