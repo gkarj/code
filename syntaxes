@@ -1,0 +1,77 @@
+### creating connection
+
+```jsx
+//* Database connection
+const db = mysql.createConnection({
+   host:process.env.HOST,
+   user:process.env.USER,
+   database:process.env.database,
+   password:process.env.PASSWORD
+})
+```
+
+### connecting to database
+
+```jsx
+//*connecting to database
+db.connect((err)=>{ if(err) 
+{ 
+ console.log("Error in connecting to database")
+}
+else {
+console.log("Database connected successfully")
+}
+})
+```
+
+### Creating a query
+
+```jsx
+// Execute the query
+connection.query(query, [query_params], (err, result) => {
+  if (err) {
+    console.error('Error executing query:', err);
+    // Handle error
+  } else {
+    // Process result
+    console.log('Query result:', result);
+  }
+});
+```
+
+### Frontend calls
+
+```jsx
+const signUpUser = async () => {
+  const userData = {
+    prn: '123456',
+    name: 'John Doe',
+    email: 'john@example.com',
+    password: 'password123'
+  };
+
+  try {
+    const response = await fetch('http://your-api-url/signup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(userData)
+    });
+
+    const responseData = await response.json();
+
+    if (response.ok) {
+      console.log('User signed up successfully:', responseData);
+    } else {
+      console.error('Error signing up user:', responseData);
+    }
+  } catch (error) {
+    console.error('Error signing up user:', error);
+  }
+};
+
+// Call the signUpUser function to initiate the signup process
+signUpUser();
+
+```
