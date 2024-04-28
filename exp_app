@@ -1,0 +1,210 @@
+import sys
+from PyQt5.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QMessageBox,
+    QDialog,
+    QGridLayout,
+    QHBoxLayout,
+)
+from pymongo import MongoClient
+from datetime import datetime
+
+# Connect to MongoDB
+client = MongoClient(
+    "url"
+)
+db = client["expense_tracker"]
+collection = db["expenses"]
+
+
+class ExpenseEditor(QDialog):  # edit screen
+    def __init__(self, parent, expense_id, title, date, amount):
+        super().__init__(parent)
+        self.setWindowTitle("Edit Expense")
+        self.expense_id = expense_id
+
+        layout = QGridLayout()
+
+        layout.addWidget(QLabel("Title:"), 0, 0)
+        self.title_entry = QLineEdit(title)
+        layout.addWidget(self.title_entry, 0, 1)
+
+        layout.addWidget(QLabel("Date (YYYY-MM-DD):"), 1, 0)
+        self.date_entry = QLineEdit(date)
+        layout.addWidget(self.date_entry, 1, 1)
+
+        layout.addWidget(QLabel("Amount:"), 2, 0)
+        self.amount_entry = QLineEdit(str(amount))
+        layout.addWidget(self.amount_entry, 2, 1)
+
+        update_button = QPushButton("Update")
+        update_button.setStyleSheet("background-color: #4CAF50; color: white;")
+        update_button.clicked.connect(self.update_expense)
+        layout.addWidget(update_button, 3, 0, 1, 2)
+
+        self.setLayout(layout)
+
+    def update_expense(self):  # update expense logic
+        title = self.title_entry.text()
+        date_str = self.date_entry.text()
+        amount_str = self.amount_entry.text()
+
+        if title and date_str and amount_str:
+            try:
+                date = datetime.strptime(date_str, "%Y-%m-%d")  # Convert to datetime
+                amount = float(amount_str)
+                collection.update_one(
+                    {"_id": self.expense_id},
+                    {"$set": {"title": title, "date": date, "amount": amount}},
+                )
+                QMessageBox.information(
+                    self, "Success", "Expense updated successfully!"
+                )
+                self.close()
+            except ValueError:
+                QMessageBox.critical(self, "Error", "Invalid date or amount format!")
+        else:
+            QMessageBox.critical(self, "Error", "All fields must be filled!")
+
+
+class ExpenseTrackerApp(QMainWindow):  # main window
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Expense Tracker")
+        self.setMinimumSize(500, 200)
+
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        layout = QVBoxLayout(central_widget)
+
+        grid_layout = QGridLayout()
+        layout.addLayout(grid_layout)
+
+        grid_layout.addWidget(QLabel("Title:"), 0, 0)
+        self.title_entry = QLineEdit()
+        grid_layout.addWidget(self.title_entry, 0, 1)
+
+        grid_layout.addWidget(QLabel("Date (YYYY-MM-DD):"), 1, 0)
+        self.date_entry = QLineEdit()
+        grid_layout.addWidget(self.date_entry, 1, 1)
+
+        grid_layout.addWidget(QLabel("Amount:"), 2, 0)
+        self.amount_entry = QLineEdit()
+        grid_layout.addWidget(self.amount_entry, 2, 1)
+
+        self.add_button = QPushButton("Add Expense")
+        self.add_button.setStyleSheet("background-color: #008CBA; color: white;")
+        self.add_button.clicked.connect(self.add_expense)
+        layout.addWidget(self.add_button)
+
+        self.view_button = QPushButton("View Expenses")
+        self.view_button.setStyleSheet("background-color: #f44336; color: white;")
+        self.view_button.clicked.connect(self.view_expenses)
+        layout.addWidget(self.view_button)
+
+        self.setStyleSheet(
+            "background-color: #f2f2f2; color: #333333; font-size: 14px;"
+        )
+
+    def add_expense(self):  # add expense logic
+        title = self.title_entry.text()
+        date_str = self.date_entry.text()
+        amount_str = self.amount_entry.text()
+
+        if title and date_str and amount_str:
+            try:
+                date = datetime.strptime(date_str, "%Y-%m-%d")  # Convert to datetime
+                amount = float(amount_str)
+                expense = {"title": title, "date": date, "amount": amount}
+                collection.insert_one(expense)
+                QMessageBox.information(self, "Success", "Expense added successfully!")
+                self.clear_entries()
+            except ValueError:
+                QMessageBox.critical(self, "Error", "Invalid date or amount format!")
+        else:
+            QMessageBox.critical(self, "Error", "All fields must be filled!")
+
+    def view_expenses(self):  # view expense logic
+        expenses = collection.find()
+
+        view_window = QMainWindow()
+        view_window.setWindowTitle("Expenses")
+
+        tree = QTreeWidget()
+        tree.setColumnCount(5)
+        tree.setHeaderLabels(["Title", "Date", "Amount", "", ""])
+        tree.setMinimumSize(500, 400)
+
+        for expense in expenses:
+            item = QTreeWidgetItem(tree)
+            item.setText(0, expense["title"])
+            item.setText(1, expense["date"].strftime("%Y-%m-%d"))
+            item.setText(2, str(expense["amount"]))
+
+            edit_button = QPushButton("Edit")
+            edit_button.setStyleSheet("background-color: #4CAF50; color: white;")
+            edit_button.clicked.connect(
+                lambda _, expense=expense: self.edit_expense(expense)
+            )
+
+            delete_button = QPushButton("Delete")
+            delete_button.setStyleSheet("background-color: #f44336; color: white;")
+            delete_button.clicked.connect(
+                lambda _, expense_id=expense["_id"]: self.delete_expense(
+                    expense_id, view_window
+                )
+            )
+
+            buttons_layout = QHBoxLayout()
+            buttons_layout.addWidget(edit_button)
+            buttons_layout.addWidget(delete_button)
+
+            tree.setItemWidget(item, 3, edit_button)
+            tree.setItemWidget(item, 4, delete_button)
+
+        view_window.setCentralWidget(tree)
+        view_window.show()
+
+    def edit_expense(self, expense):  # edit expense logic
+        editor = ExpenseEditor(
+            self,
+            expense["_id"],
+            expense["title"],
+            expense["date"].strftime("%Y-%m-%d"),
+            expense["amount"],
+        )
+        editor.exec_()
+
+    def delete_expense(self, expense_id, view_window):  # delete logic
+        result = collection.delete_one({"_id": expense_id})
+        if result.deleted_count > 0:
+            QMessageBox.information(
+                view_window, "Success", "Expense deleted successfully!"
+            )
+            view_window.close()
+        else:
+            QMessageBox.critical(view_window, "Error", "Expense not found!")
+
+    def clear_entries(self):  # clear entries logic
+        self.title_entry.clear()
+        self.date_entry.clear()
+        self.amount_entry.clear()
+
+
+def main():
+    app = QApplication(sys.argv)
+    window = ExpenseTrackerApp()
+    window.show()
+    sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    main()
