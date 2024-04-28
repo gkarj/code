@@ -1,0 +1,410 @@
+create database ecom; 
+use ecom;
+
+CREATE TABLE Customers (
+    Customer_id VARCHAR(20) PRIMARY KEY,
+    Customer_name VARCHAR(20),
+    City_id VARCHAR(20),
+    First_order_date DATE
+);
+
+INSERT INTO Customers VALUES('1','Bhupendra','1','2024-02-24');
+INSERT INTO Customers VALUES('2','Omkar','2','2024-02-23');
+INSERT INTO Customers VALUES('3','Aarav','3','2024-02-22');
+INSERT INTO Customers VALUES('4','Aditi','4','2024-02-21');
+INSERT INTO Customers VALUES('5','Ananya','5','2024-02-20');
+INSERT INTO Customers VALUES('6','Arjun','6','2024-02-19');
+INSERT INTO Customers VALUES('7','Avani','7','2024-02-18');
+INSERT INTO Customers VALUES('8','Devika','8','2024-02-17');
+INSERT INTO Customers VALUES('9','Sharvani','9','2024-02-16');
+INSERT INTO Customers VALUES('10','Kavya','10','2024-02-15');
+
+
+
+# Walk-In Customers Table
+CREATE TABLE Walk_in_Customers (
+    Customer_id VARCHAR(20),
+    Tourism_guide VARCHAR(50),
+    Timing DATE, 
+    FOREIGN KEY(Customer_id) REFERENCES Customers(Customer_id)
+);
+
+# Inserting Values into Walk_in_Customers Table
+INSERT INTO Walk_in_Customers VALUES('1', 'Bhupendra','2024-02-24');
+INSERT INTO Walk_in_Customers VALUES('2', 'Omkar','2024-02-23');
+INSERT INTO Walk_in_Customers VALUES('3', 'Aarav','2024-02-22');
+INSERT INTO Walk_in_Customers VALUES('5', 'Ananya','2024-02-20');
+INSERT INTO Walk_in_Customers VALUES('7', 'Avani','2024-02-18');
+
+SELECT * FROM Customers;
+SELECT * FROM Walk_in_Customers;
+
+# Mail Order Customers Table
+CREATE TABLE Mail_Order_Customers (
+    Customer_id VARCHAR(20),
+    Post_address VARCHAR(50),
+    Timing DATE, 
+    FOREIGN KEY(Customer_id) REFERENCES Customers(Customer_id)
+);
+
+-- Inserting Values for Customers 4 and 6 into Mail_Order_Customers Table
+INSERT INTO Mail_Order_Customers VALUES('4', 'kudal', '2024-02-24');
+INSERT INTO Mail_Order_Customers VALUES('6', 'Sangli', '2024-02-23');
+INSERT INTO Mail_Order_Customers VALUES('8', 'Chennai', '2024-02-17');
+INSERT INTO Mail_Order_Customers VALUES('9', 'Kolkata', '2024-02-16');
+INSERT INTO Mail_Order_Customers VALUES('10', 'Jaipur', '2024-02-15');
+
+
+SELECT * FROM Mail_Order_Customers;
+
+# Sales 
+
+CREATE TABLE Headquarters (
+    City_id VARCHAR(20) PRIMARY KEY,
+    City_name VARCHAR(50),
+    Headquarters_addr VARCHAR(50),
+    State VARCHAR(20),
+    Timing DATE
+);
+
+INSERT INTO Headquarters VALUES('1','Pune','Pune Headquarters','Maharashtra','2024-02-20');
+INSERT INTO Headquarters VALUES('2','Mumbai','Mumbai Headquarters','Maharashtra','2024-02-20');
+INSERT INTO Headquarters VALUES('3','Delhi','Delhi Headquarters','Delhi','2024-02-20');
+INSERT INTO Headquarters VALUES('4','kudal','Kudal Headquarters','Maharashtra','2024-02-20');
+INSERT INTO Headquarters VALUES('5','Bangalore','Bangalore Headquarters','Karnataka','2024-02-20');
+INSERT INTO Headquarters VALUES('6','Sangli','Sangli Headquarters','Maharashtra','2024-02-20');
+INSERT INTO Headquarters VALUES('7','Hyderabad','Hyderabad Headquarters','Telangana','2024-02-20');
+INSERT INTO Headquarters VALUES('8','Chennai','Chennai Headquarters','Tamil Nadu','2024-02-20');
+INSERT INTO Headquarters VALUES('9','Kolkata','Kolkata Headquarters','West Bengal','2024-02-20');
+INSERT INTO Headquarters VALUES('10','Jaipur','Jaipur Headquarters','Rajasthan','2024-02-20');
+# Stores Table
+
+CREATE TABLE Stores (
+    Store_id VARCHAR(20) PRIMARY KEY,
+    City_id VARCHAR(50),
+    Phone VARCHAR(20),
+    Timing DATE,
+    FOREIGN KEY(City_id) REFERENCES Headquarters(City_id)
+);
+
+INSERT INTO Stores VALUES('1','1','9307767356','2024-02-24');-- pune
+INSERT INTO Stores VALUES('2','2','7506561817','2024-02-23'); -- mumbai
+INSERT INTO Stores VALUES('3','3','0000000000','2024-02-20'); -- Delhi
+INSERT INTO Stores VALUES('4','4','1111111111','2024-02-20'); -- kudal
+INSERT INTO Stores VALUES('5','5','2222222222','2024-02-20'); -- Bangalore
+INSERT INTO Stores VALUES('6','6','3333333333','2024-02-20'); -- Sangli
+INSERT INTO Stores VALUES('7','7','4444444444','2024-02-20'); -- Hyderabad
+INSERT INTO Stores VALUES('8','8','5555555555','2024-02-20'); -- Chennai
+INSERT INTO Stores VALUES('9','9','6666666666','2024-02-20'); -- Kolkata
+INSERT INTO Stores VALUES('10','10','7777777777','2024-02-20'); -- Jaipur
+
+# Items Table
+
+CREATE TABLE Items (
+    Item_id VARCHAR(20) PRIMARY KEY,
+    Description VARCHAR(50),
+    Size INT,
+    Weight INT,
+    Unit_price INT,
+    Timing DATE
+);
+
+INSERT INTO Items VALUES('1','laptop',1,1,30000,'2024-02-24');
+INSERT INTO Items VALUES('2','smartphone',1,1,15000,'2024-02-23');
+INSERT INTO Items VALUES('3','camera',1,1,20000,'2024-02-22');
+INSERT INTO Items VALUES('4','watch',1,1,5000,'2024-02-21');
+INSERT INTO Items VALUES('5','headphones',1,1,3000,'2024-02-20');
+INSERT INTO Items VALUES('6','tablet',1,1,20000,'2024-02-19');
+INSERT INTO Items VALUES('7','speaker',1,1,10000,'2024-02-18');
+INSERT INTO Items VALUES('8','printer',1,1,15000,'2024-02-17');
+INSERT INTO Items VALUES('9','external hard drive',1,1,5000,'2024-02-16');
+INSERT INTO Items VALUES('10','fitness tracker',1,1,8000,'2024-02-15');
+
+# Stores Items
+CREATE TABLE Stored_Items (
+    Store_id VARCHAR(20),
+    Item_id VARCHAR(20),
+    Quantity_held INT,
+    Timing DATE,
+    PRIMARY KEY(Store_id,Item_id),
+    FOREIGN KEY(Store_id) REFERENCES Stores(Store_id),
+    FOREIGN KEY(Item_id) REFERENCES Items(Item_id)
+);
+
+INSERT INTO Stored_Items VALUES('1','2',20,'2024-02-24'); 
+INSERT INTO Stored_Items VALUES('1','3',10,'2024-02-24'); 
+INSERT INTO Stored_Items VALUES('2','4',15,'2024-02-23'); 
+INSERT INTO Stored_Items VALUES('2','5',25,'2024-02-23'); 
+INSERT INTO Stored_Items VALUES('3','6',8,'2024-02-22'); 
+INSERT INTO Stored_Items VALUES('3','7',12,'2024-02-22'); 
+INSERT INTO Stored_Items VALUES('4','8',18,'2024-02-21'); 
+INSERT INTO Stored_Items VALUES('4','9',5,'2024-02-21'); 
+INSERT INTO Stored_Items VALUES('5','10',30,'2024-02-20'); 
+INSERT INTO Stored_Items VALUES('5','1',10,'2024-02-20'); 
+INSERT INTO Stored_Items VALUES('1','4',25,'2024-02-24'); 
+INSERT INTO Stored_Items VALUES('1','5',15,'2024-02-24'); 
+INSERT INTO Stored_Items VALUES('2','6',12,'2024-02-23'); 
+INSERT INTO Stored_Items VALUES('2','7',20,'2024-02-23'); 
+INSERT INTO Stored_Items VALUES('3','8',30,'2024-02-22'); 
+INSERT INTO Stored_Items VALUES('3','9',8,'2024-02-22');
+INSERT INTO Stored_Items VALUES('4','10',22,'2024-02-21'); 
+INSERT INTO Stored_Items VALUES('4','1',18,'2024-02-21');
+INSERT INTO Stored_Items VALUES('5','2',35,'2024-02-20'); 
+INSERT INTO Stored_Items VALUES('5','3',15,'2024-02-20'); 
+
+
+CREATE TABLE Orders (
+    Order_no VARCHAR(20) PRIMARY KEY,
+    Order_date DATE,
+    Customer_id VARCHAR(20)
+);
+
+INSERT INTO Orders VALUES('1','2024-02-24','1');
+INSERT INTO Orders VALUES('2','2024-02-23','2');
+INSERT INTO Orders VALUES('3','2024-02-22','3');
+INSERT INTO Orders VALUES('4','2024-02-21','4');
+INSERT INTO Orders VALUES('5','2024-02-20','5');
+INSERT INTO Orders VALUES('6','2024-02-19','6');
+INSERT INTO Orders VALUES('7','2024-02-18','7');
+INSERT INTO Orders VALUES('8','2024-02-17','8');
+INSERT INTO Orders VALUES('9','2024-02-16','9');
+INSERT INTO Orders VALUES('10','2024-02-15','10');
+
+CREATE TABLE Ordered_Items (
+    Order_no VARCHAR(20),
+    Item_id VARCHAR(20),
+    Quantity_ordered INT,
+    Ordered_price INT,
+    Timing DATE,
+    PRIMARY KEY(Order_no,Item_id),
+    FOREIGN KEY(Order_no) REFERENCES Orders(Order_no),
+    FOREIGN KEY(Item_id) REFERENCES Items(Item_id)
+);
+
+
+INSERT INTO Ordered_Items VALUES('1','1',13,30000,'2024-02-24');
+INSERT INTO Ordered_Items VALUES('2','2',5,15000,'2024-02-23');
+INSERT INTO Ordered_Items VALUES('3','3',2,20000,'2024-02-22');
+INSERT INTO Ordered_Items VALUES('4','4',3,5000,'2024-02-21');
+INSERT INTO Ordered_Items VALUES('5','5',4,3000,'2024-02-20');
+INSERT INTO Ordered_Items VALUES('6','6',7,20000,'2024-02-19');
+INSERT INTO Ordered_Items VALUES('7','7',10,10000,'2024-02-18');
+INSERT INTO Ordered_Items VALUES('8','8',2,15000,'2024-02-17');
+INSERT INTO Ordered_Items VALUES('9','9',1,5000,'2024-02-16');
+INSERT INTO Ordered_Items VALUES('10','10',8,8000,'2024-02-15');
+
+# 1 Find all the stores along with city, state, phone, description, size, weight and unit price that hold a particular item of stock.
+CREATE TABLE Report_Q1 (
+    City_name VARCHAR(50),
+    State VARCHAR(20),
+    Phone VARCHAR(20),
+    Description VARCHAR(50),
+    Size INT,
+    Weight INT,
+    Unit_price INT
+);
+
+INSERT INTO Report_Q1
+SELECT 
+    H.City_name,
+    H.State,
+    S.Phone,
+    I.Description,
+    I.Size,
+    I.Weight,
+    I.Unit_price
+FROM 
+    Stores S
+JOIN 
+    Headquarters H ON S.City_id = H.City_id
+JOIN 
+    Stored_Items SI ON S.Store_id = SI.Store_id
+JOIN 
+    Items I ON SI.Item_id = I.Item_id
+WHERE 
+    I.Description = 'laptop';
+
+SELECT * FROM Report_Q1;
+
+# 2 Find all the orders along with customer name and order date that can be fulfilled by a given store. 
+
+CREATE TABLE Report_Q2(
+    Store_id VARCHAR(20),
+    Order_no VARCHAR(20),
+    Customer_name VARCHAR(20),
+    Order_date DATE
+);
+
+INSERT INTO Report_Q2
+SELECT 
+    SI.Store_id,
+    O.Order_no,
+    C.Customer_name,
+    O.Order_date
+FROM 
+    Orders O
+JOIN 
+    Customers C ON O.Customer_id = C.Customer_id
+JOIN 
+    Ordered_Items OI ON O.Order_no = OI.Order_no
+JOIN 
+    Items I ON OI.Item_id = I.Item_id
+JOIN 
+    Stored_Items SI ON I.Item_id = SI.Item_id
+WHERE 
+    SI.Store_id = '1'; 
+
+select * from report_q2;
+
+
+# 3
+CREATE TABLE Report_Q3(
+    Customer_id VARCHAR(20),
+    Store_id VARCHAR(20),
+    City_name VARCHAR(20),
+    Phone VARCHAR(20)
+);
+
+INSERT INTO Report_Q3 (Customer_id, Store_id, City_name, Phone)
+SELECT DISTINCT
+    O.Customer_id,
+    S.Store_id,
+    H.City_name,
+    S.Phone
+FROM 
+    Orders O
+JOIN 
+    Customers C ON O.Customer_id = C.Customer_id
+JOIN 
+    Ordered_Items OI ON O.Order_no = OI.Order_no
+JOIN 
+    Items I ON OI.Item_id = I.Item_id
+JOIN 
+    Stored_Items SI ON I.Item_id = SI.Item_id
+JOIN 
+    Stores S ON SI.Store_id = S.Store_id
+JOIN 
+    Headquarters H ON S.City_id = H.City_id
+WHERE 
+    O.Customer_id = '1';
+
+select * from report_q3;
+
+# 4
+CREATE TABLE Report_Q4(
+    City_name VARCHAR(50),
+    Headquarters_addr VARCHAR(50),
+    State VARCHAR(20),
+    Quantity_held VARCHAR(20)
+);
+
+INSERT INTO Report_Q4 (City_name, Headquarters_addr, State, Quantity_held)
+SELECT 
+    H.City_name,
+    H.Headquarters_addr,
+    H.State,
+    SI.Quantity_held
+FROM 
+    Stored_Items SI
+JOIN 
+    Items I ON SI.Item_id = I.Item_id
+JOIN 
+    Stores S ON SI.Store_id = S.Store_id
+JOIN 
+    Headquarters H ON S.City_id = H.City_id
+WHERE 
+    SI.Quantity_held > 5;
+    
+select * from report_q4;    
+
+# 5
+CREATE TABLE Report_Q5(
+    Order_no VARCHAR(20),
+    Item_id VARCHAR(20),
+    Description VARCHAR(20),
+    Store_id VARCHAR(20),
+    City_name VARCHAR(20)
+);
+
+INSERT INTO Report_Q5 (Order_no, Item_id, Description, Store_id, City_name)
+SELECT 
+    O.Order_no,
+    OI.Item_id,
+    I.Description,
+    S.Store_id,
+    H.City_name
+FROM 
+    Orders O
+JOIN 
+    Ordered_Items OI ON O.Order_no = OI.Order_no
+JOIN 
+    Items I ON OI.Item_id = I.Item_id
+JOIN 
+    Stores S ON S.Store_id IN (
+        SELECT SI.Store_id 
+        FROM Stored_Items SI 
+        WHERE SI.Item_id = OI.Item_id
+    )
+JOIN 
+    Headquarters H ON S.City_id = H.City_id;
+
+select * from report_q5;
+
+# 6
+CREATE TABLE Report_Q6(
+    Customer_id VARCHAR(20),
+    City_name VARCHAR(20),
+    State VARCHAR(20)
+);
+
+SELECT Customer_id, City_name, State
+FROM Customers NATURAL JOIN Headquarters;
+
+INSERT INTO Report_Q6
+    SELECT Customer_id, City_name, State
+    FROM Customers NATURAL JOIN Headquarters;
+
+# 7
+CREATE TABLE Report_Q7(
+    Quantity_held INT,
+    Item_id VARCHAR(20),
+    City_name VARCHAR(20)
+);
+
+INSERT INTO Report_Q7
+    SELECT SUM(Quantity_held) AS TotalQuantity, Item_id, City_name 
+    FROM Stored_Items 
+    NATURAL JOIN Stores 
+    NATURAL JOIN Headquarters 
+    GROUP BY Item_id, City_name;
+
+
+# 8
+CREATE TABLE Report_Q8(
+    Order_no VARCHAR(20),
+    Item_id VARCHAR(20),
+    Quantity_ordered INT,
+    Customer_id VARCHAR(20),
+    Store_id VARCHAR(20),
+    City_id VARCHAR(20)
+);
+
+SELECT Order_no, Item_id, Quantity_ordered, Customer_id, Store_id, City_id
+FROM (Ordered_Items NATURAL JOIN Orders NATURAL JOIN Stored_Items) NATURAL JOIN Stores;
+
+INSERT INTO Report_Q8
+    SELECT Order_no, Item_id, Quantity_ordered, Customer_id, Store_id, City_id 
+    FROM (Ordered_Items NATURAL JOIN Orders NATURAL JOIN Stored_Items) NATURAL JOIN Stores;
+
+
+# 9
+CREATE TABLE Report_Q9(
+    Customer_id VARCHAR(20)
+);
+
+SELECT Customer_id
+FROM Walk_in_Customers NATURAL JOIN Mail_Order_Customers;
+
+INSERT INTO Report_Q9
+    SELECT Customer_id
+    FROM Walk_in_Customers NATURAL JOIN Mail_Order_Customers;
